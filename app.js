@@ -1,14 +1,31 @@
 const express = require('express');
-const app = express();
-const port = 3000;
+const ejs = require('ejs');
 const path = require('path');
 
-app.use(express.static('public'));
+const app = express();
+const port = 3000;
 
+//ejs
+app.set('view engine', 'ejs');
+app.set("views", path.join(__dirname, "views"));
+
+//************routes ***************
 //index
 app.get('/', (req, res) => {
-  res.sendFile(path.resolve(__dirname, 'public/index.html'));
+  res.render('index.ejs');
 });
+
+//about
+app.get('/about', (req, res) => {
+  res.render('about.ejs');
+});
+
+//add
+app.get('/add', (req, res) => {
+  res.render('add.ejs');
+});
+
+app.use(express.static('public'));
 
 // listen function
 app.listen(port, () => {
