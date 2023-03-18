@@ -12,7 +12,7 @@ const Photo = require('./models/Photo');
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(fileUpload());
-app.use(methodOverride('_method'));
+app.use(methodOverride('_method', { methods: ['POST', 'GET'] }));
 
 //mongoose
 const mongoose = require('mongoose');
@@ -47,10 +47,7 @@ app.post('/photos', async (req, res) => {
   const uploadsDir = __dirname + '/public/uploads';
 
   if (!fs.existsSync(uploadsDir)) {
-    console.log('dizin yok');
     fs.mkdirSync(uploadsDir);
-  } else {
-    console.log('dizin var');
   }
 
   myFile.mv(uploadPath);
@@ -89,6 +86,16 @@ app.put('/photos/:id', async (req, res) => {
     ...req.body,
   });
   res.redirect(`/photos/${id}`);
+});
+
+//delete photo form handler
+app.delete('/photos/:id', async (req, res) => {
+  const photo1 = await Photo.findById(req.params.id);
+  const fileForDelete = __dirname + '/public' + photo1.image;
+  // fs.unlinkSync(fileForDelete);
+  if(fs.existsSync(fileForDelete)){ fs.unlinkSync(fileForDelete) }
+  await Photo.findByIdAndDelete(req.params.id);
+  res.redirect('/');
 });
 
 app.use(express.static('public'));
