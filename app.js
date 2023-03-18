@@ -1,6 +1,9 @@
 const express = require('express');
+const fs = require('fs');
 const ejs = require('ejs');
 const path = require('path');
+var methodOverride = require('method-override');
+const fileUpload = require('express-fileupload');
 const { urlencoded } = require('express');
 const app = express();
 const Photo = require('./models/Photo');
@@ -8,6 +11,8 @@ const Photo = require('./models/Photo');
 // middlewares
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
+app.use(fileUpload());
+app.use(methodOverride('_method'));
 
 //mongoose
 const mongoose = require('mongoose');
@@ -20,7 +25,7 @@ app.set('views', path.join(__dirname, 'views'));
 //////////////////routes//////////////////
 //index
 app.get('/', async (req, res) => {
-  const photos = await Photo.find({});
+  const photos = await Photo.find({}).sort('-dateCreated');
   res.render('index.ejs', { photos });
 });
 
@@ -34,10 +39,56 @@ app.get('/add', (req, res) => {
   res.render('add.ejs');
 });
 
-//photos post
+//photos post handler
 app.post('/photos', async (req, res) => {
-  await Photo.create(req.body);
+  let myFile = req.files.image;
+  let uploadPath = __dirname + '/public/uploads/' + myFile.name;
+
+  const uploadsDir = __dirname + '/public/uploads';
+
+  if (!fs.existsSync(uploadsDir)) {
+    console.log('dizin yok');
+    fs.mkdirSync(uploadsDir);
+  } else {
+    console.log('dizin var');
+  }
+
+  myFile.mv(uploadPath);
+
+  await Photo.create({
+    ...req.body,
+    image: '/uploads/' + myFile.name,
+  });
   res.redirect('/');
+
+  // myFile.mv(uploadPath, async () => {
+  //   await Photo.create({
+  //     ...req.body,
+  //     image: '/uploads/' + myFile.name,
+  //   });
+  //   res.redirect('/');
+  // });
+});
+
+//show photo
+app.get('/photos/:id', async (req, res) => {
+  const photo = await Photo.findById(req.params.id);
+  res.render('photo.ejs', { photo });
+});
+
+//edit photo form
+app.get('/photos/edit/:id', async (req, res) => {
+  const photo = await Photo.findById(req.params.id);
+  res.render('edit.ejs', { photo });
+});
+
+//edit photo form handler
+app.put('/photos/:id', async (req, res) => {
+  const { id } = req.params;
+  await Photo.findByIdAndUpdate(id, {
+    ...req.body,
+  });
+  res.redirect(`/photos/${id}`);
 });
 
 app.use(express.static('public'));
