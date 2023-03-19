@@ -1,7 +1,15 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema();
 
-mongoose.connect('mongodb://127.0.0.1:27017/pcat-test');
+//mongoose
+mongoose
+  .connect(
+    'mongodb+srv://burak432:UK5QbMHUFPEJfsAu@mycluster.byoeg4t.mongodb.net/pcat-db?retryWrites=true&w=majority'
+  )
+  .then(() => {
+    console.log('mongo-db connected');
+  })
+  .catch((err) => console.log(err));
 
 const PhotoSchema = new mongoose.Schema({
   title: String,
